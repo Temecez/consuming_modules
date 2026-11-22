@@ -52,7 +52,7 @@ terraform validate
 
 | Bundle | Version |
 |---|---|
-| `aws` | `aws/v1.1.0-rc.2` (move to `aws/v1.1.0`, identical code) |
+| `aws` | `aws/v1.1.0` |
 
 Modules are pinned by git tag in each `source`:
 
