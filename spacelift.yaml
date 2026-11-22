@@ -1,0 +1,16 @@
+# Read by spacelift_admin (repo discovery). Each entry becomes a Spacelift stack
+# named consuming_modules-<account>-<region>. Accounts are AWS account names
+# from Organizations; you can only use accounts your team is allowed to use.
+# Roles, integrations and permissions are managed by the platform, not here.
+deployments:
+  - account: temecez10_dev
+    region: us-east-2
+    var_file: envs/dev/us-east-2.tfvars
+
+  - account: temecez10_dev
+    region: us-east-1
+    var_file: envs/dev/us-east-1.tfvars
+
+  - account: temecez10_prod
+    region: us-east-1
+    var_file: envs/prod/us-east-1.tfvars
