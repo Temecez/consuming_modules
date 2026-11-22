@@ -1,10 +1,10 @@
 variable "environment" {
-  description = "Environment name (dev, stage, prod). Used in names and tags."
+  description = "Environment name (dev, test, prod: the AWS OU). Used in names and tags."
   type        = string
 
   validation {
-    condition     = contains(["dev", "stage", "prod"], var.environment)
-    error_message = "environment must be one of: dev, stage, prod."
+    condition     = contains(["dev", "test", "prod"], var.environment)
+    error_message = "environment must be one of: dev, test, prod."
   }
 }
 
