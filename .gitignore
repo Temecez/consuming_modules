@@ -1,0 +1,27 @@
+# Terraform working files
+.terraform/
+*.tfstate
+*.tfstate.*
+state/
+crash.log
+crash.*.log
+*.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Ad-hoc variable files may hold secrets. The per-environment files in envs/
+# are non-secret and committed on purpose.
+*.tfvars
+*.tfvars.json
+!envs/*.tfvars
+
+# NOTE: .terraform.lock.hcl IS committed in root configurations like this one,
+# so every run uses the same provider versions.
+
+# IDE
+.idea/
+.vscode/
