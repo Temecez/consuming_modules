@@ -8,11 +8,7 @@ terraform {
     }
   }
 
-  # Settings come from envs/<env>.tfbackend at init time:
-  #   terraform init -reconfigure -backend-config=envs/dev.tfbackend
-  #
-  # Local state for the POC. At enterprise scale, switch to:
-  #   backend "s3" {}
-  # and put bucket/key/region/use_lockfile in each envs/<env>.tfbackend.
-  backend "local" {}
+  # No backend block: Spacelift manages state for each stack and injects its
+  # own backend at run time (state-credentials.tf). Declaring one here causes
+  # "Duplicate backend configuration".
 }

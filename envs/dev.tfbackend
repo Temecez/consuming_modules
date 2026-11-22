@@ -1,6 +1,0 @@
-# Local backend for the POC. With an S3 backend this would be e.g.:
-#   bucket       = "<org>-terraform-state-dev"
-#   key          = "consuming_modules/terraform.tfstate"
-#   region       = "us-east-1"
-#   use_lockfile = true
-path = "state/dev.tfstate"

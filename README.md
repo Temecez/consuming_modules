@@ -7,33 +7,31 @@ Infrastructure that consumes the shared modules from [temecez_modules](https://g
 ```
 main.tf  providers.tf  versions.tf  variables.tf  outputs.tf   # written once, shared by all envs
 envs/
-  dev.tfvars    dev.tfbackend     # per-env settings + where that env's state lives
-  prod.tfvars   prod.tfbackend
+  dev.tfvars                # per-environment settings
+  prod.tfvars
+admin/                      # sets up the Spacelift stacks (see below); not run by them
 ```
 
-One codebase, many environments. Each environment differs only by its variables (`envs/<env>.tfvars`) and its state (`envs/<env>.tfbackend`). Add `stage` by adding those two files.
+One codebase, many environments. Each environment is a **Spacelift stack** (`consuming_modules-dev`, `consuming_modules-prod`) that runs this folder with its own `envs/<env>.tfvars` and its own Spacelift-managed state. Add `stage` with an `envs/stage.tfvars` file plus a module block in `admin/`.
 
 ## Usage
 
-```sh
-# pick the environment (re-run with -reconfigure whenever you switch)
-terraform init -reconfigure -backend-config=envs/dev.tfbackend
+Changes are deployed by Spacelift, not from a laptop:
 
-terraform plan  -var-file=envs/dev.tfvars -out=dev.tfplan
-terraform apply dev.tfplan
-```
+1. Push a branch and open a PR. Spacelift can show a proposed plan on the PR.
+2. Merge to `main`. Each stack starts a run: `tofu plan -var-file=envs/<env>.tfvars`.
+3. Review the plan in Spacelift and click **Confirm** to apply (`autodeploy` is off).
 
-**On Windows PowerShell, quote any argument that contains a `.`**, or PowerShell splits it at the dot and Terraform fails with "No positional arguments are expected":
+There's no backend block in `versions.tf`: Spacelift injects its own at run time and holds each stack's state. To check the code locally without touching state:
 
 ```powershell
-terraform init -reconfigure "-backend-config=envs/dev.tfbackend"
-terraform plan "-var-file=envs/dev.tfvars" "-out=dev.tfplan"
-terraform apply dev.tfplan
+terraform init -backend=false
+terraform validate
 ```
 
-**Always pass the matching pair** (`dev.tfbackend` with `dev.tfvars`). Mixing them would plan dev settings against prod state. A CI pipeline removes this risk by passing both from one environment name.
+Running `plan`/`apply` locally would use a separate local state file that Spacelift knows nothing about, so don't apply from a laptop.
 
-Requires AWS credentials for the environment's account, and git access to the private `temecez_modules` repo.
+The stacks need Spacelift's GitHub app to have access to this repo **and** to `temecez_modules`, which `tofu init` downloads modules from.
 
 ## Module versions
 
