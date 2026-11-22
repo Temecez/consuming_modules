@@ -55,6 +55,25 @@ Terraform doesn't allow variables in `source`, so **all environments share the v
 
 Prod only ever runs what's on `main`. Check the [aws changelog](https://github.com/Temecez/temecez_modules/blob/main/modules/aws/CHANGELOG.md) for breaking changes before bumping a major version.
 
+## Spacelift
+
+`admin/` is a separate configuration that sets up Spacelift to run this repo. For each environment it creates a stack, an IAM role in that environment's account, and an AWS integration connecting the two. Apply it once from your machine. It is not run by the stacks it creates.
+
+```powershell
+# One-time: save the API key for your Windows user (prompts, so the secret
+# never lands in PowerShell history). Open a new terminal afterwards.
+$cred = Get-Credential -Message "Spacelift API key"   # username = key ID, password = secret
+[Environment]::SetEnvironmentVariable("SPACELIFT_API_KEY_ID",     $cred.UserName, "User")
+[Environment]::SetEnvironmentVariable("SPACELIFT_API_KEY_SECRET", $cred.GetNetworkCredential().Password, "User")
+
+cd admin
+terraform init
+terraform plan "-out=admin.tfplan"
+terraform apply admin.tfplan
+```
+
+Stacks run with OpenTofu (Spacelift's Terraform option stops at 1.5.x) and pass `-var-file=envs/<env>.tfvars` through `TF_CLI_ARGS_plan`.
+
 ## Tagging
 
 Two layers apply tags:
