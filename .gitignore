@@ -17,7 +17,7 @@ terraform.rc
 # are non-secret and committed on purpose.
 *.tfvars
 *.tfvars.json
-!envs/*.tfvars
+!envs/**/*.tfvars
 
 # NOTE: .terraform.lock.hcl IS committed in root configurations like this one,
 # so every run uses the same provider versions.

@@ -5,21 +5,32 @@ Infrastructure that consumes the shared modules from [temecez_modules](https://g
 ## Layout
 
 ```
-main.tf  providers.tf  versions.tf  variables.tf  outputs.tf   # written once, shared by all envs
+main.tf  providers.tf  versions.tf  variables.tf  outputs.tf   # written once, shared by all deployments
 envs/
-  dev.tfvars                # per-environment settings
-  prod.tfvars
-admin/                      # sets up the Spacelift stacks (see below); not run by them
+  <environment>/<region>.tfvars   # one file per deployment
+  dev/us-east-2.tfvars
+  dev/us-east-1.tfvars
+  prod/us-east-1.tfvars
+admin/                            # sets up Spacelift (see below); not run by the stacks
 ```
 
-One codebase, many environments. Each environment is a **Spacelift stack** (`consuming_modules-dev`, `consuming_modules-prod`) that runs this folder with its own `envs/<env>.tfvars` and its own Spacelift-managed state. Add `stage` with an `envs/stage.tfvars` file plus a module block in `admin/`.
+Two dimensions:
+
+| Concept | Means | Gets |
+|---|---|---|
+| **Environment** (`dev`, `prod`) | An **AWS account** | One Spacelift IAM role + one AWS integration, shared by all its deployments |
+| **Deployment** (`dev-us-east-2`, ...) | An environment in one **region** | One Spacelift stack, running this folder with `envs/<environment>/<region>.tfvars` and its own Spacelift-managed state |
+
+One codebase for everything. Today every environment points at the same AWS account; making them separate accounts only changes the account mapping in `admin/providers.tf`.
+
+To add a region to an environment: add `envs/<environment>/<region>.tfvars` and an entry in `deployments` in `admin/variables.tf`. To add an environment (account): also add it to `environments`, plus a provider alias and integration/role blocks in `admin/`.
 
 ## Usage
 
 Changes are deployed by Spacelift, not from a laptop:
 
 1. Push a branch and open a PR. Spacelift can show a proposed plan on the PR.
-2. Merge to `main`. Each stack starts a run: `tofu plan -var-file=envs/<env>.tfvars`.
+2. Merge to `main`. Each stack starts a run: `tofu plan -var-file=envs/<environment>/<region>.tfvars`.
 3. Review the plan in Spacelift and click **Confirm** to apply (`autodeploy` is off).
 
 There's no backend block in `versions.tf`: Spacelift injects its own at run time and holds each stack's state. To check the code locally without touching state:
@@ -37,7 +48,7 @@ The stacks need Spacelift's GitHub app to have access to this repo **and** to `t
 
 | Bundle | Version |
 |---|---|
-| `aws` | `aws/v1.0.0` |
+| `aws` | `aws/v1.1.0-rc.2` (move to `aws/v1.1.0`, identical code) |
 
 Modules are pinned by git tag in each `source`:
 
@@ -55,7 +66,12 @@ Prod only ever runs what's on `main`. Check the [aws changelog](https://github.c
 
 ## Spacelift
 
-`admin/` is a separate configuration that sets up Spacelift to run this repo. For each environment it creates a stack, an IAM role in that environment's account, and an AWS integration connecting the two. Apply it once from your machine. It is not run by the stacks it creates.
+`admin/` is a separate configuration that sets up Spacelift to run this repo, using the shared modules:
+
+- per **environment** (account): `spacelift/aws-integration` and `aws/spacelift-role` (`spacelift-dev`, `spacelift-prod`). The role trusts any stack attached to its integration, so adding a region needs no IAM change.
+- per **deployment**: `spacelift/stack`, with its environment's integration and the `github-modules-read` context attached.
+
+Apply it from your machine. It is not run by the stacks it creates.
 
 ```powershell
 # One-time: save the API key for your Windows user (prompts, so the secret
@@ -70,7 +86,9 @@ terraform plan "-out=admin.tfplan"
 terraform apply admin.tfplan
 ```
 
-Stacks run with OpenTofu (Spacelift's Terraform option stops at 1.5.x) and pass `-var-file=envs/<env>.tfvars` through `TF_CLI_ARGS_plan`.
+Stacks run with OpenTofu (Spacelift's Terraform option stops at 1.5.x) and pass `-var-file=envs/<environment>/<region>.tfvars` through `TF_CLI_ARGS_plan`.
+
+The `github-modules-read` context is created by hand in Spacelift (it holds a GitHub token, which shouldn't be in Terraform state); `admin/` only attaches it.
 
 ## Tagging
 

@@ -7,13 +7,18 @@ provider "spacelift" {
   api_key_endpoint = "https://temecez.app.us.spacelift.io"
 }
 
-# One AWS provider per environment, because each environment's IAM role must
-# be created in that environment's account. Profiles are null by default
-# (default credential chain); set them in terraform.tfvars when the accounts
-# really are separate.
+# One AWS provider per environment (= AWS account), used only to create that
+# account's Spacelift role. IAM is global, so the region here doesn't matter.
+#
+# Today every environment uses the same account (aws_profile = null, the
+# default credential chain). When environments become separate accounts, give
+# each one a profile in var.environments, or replace `profile` with:
+#   assume_role {
+#     role_arn = "arn:aws:iam::<account-id>:role/OrganizationAccountAccessRole"
+#   }
 provider "aws" {
   alias   = "dev"
-  region  = var.environments["dev"].region
+  region  = "us-east-1"
   profile = var.environments["dev"].aws_profile
 
   default_tags {
@@ -23,7 +28,7 @@ provider "aws" {
 
 provider "aws" {
   alias   = "prod"
-  region  = var.environments["prod"].region
+  region  = "us-east-1"
   profile = var.environments["prod"].aws_profile
 
   default_tags {
