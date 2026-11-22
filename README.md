@@ -22,7 +22,7 @@ spacelift.yaml                    # which accounts/regions to deploy to (read by
 deployments:
   - account: temecez10_dev        # AWS account name from Organizations
     region: us-east-2
-    var_file: envs/dev/us-east-2.tfvars
+    var_file: envs/dev/dev.tfvars
 ```
 
 The repo opts in with two GitHub topics: `spacelift-managed` and `team-poc` (its owning team). The platform decides the rest:
