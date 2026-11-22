@@ -10,7 +10,7 @@ locals {
 # The version is promoted across environments by the pipeline: try it in dev
 # from a branch, and stage/prod pick it up once it's merged to main.
 module "logs_bucket" {
-  source = "git::https://github.com/Temecez/temecez_modules.git//modules/aws/s3-bucket?ref=aws/v1.1.0-rc.2"
+  source = "git::https://github.com/Temecez/temecez_modules.git//modules/aws/s3-bucket?ref=aws/v1.1.0"
 
   bucket_name   = "${local.name_prefix}-${var.region}"
   force_destroy = var.bucket_force_destroy
